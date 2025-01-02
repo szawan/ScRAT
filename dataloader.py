@@ -221,3 +221,58 @@ def Custom_data(args):
     # print(l_dict)
 
     return p_idx, labels_, cell_type, patient_id, origin, cell_type_large
+
+
+# Sania: Redefining function for my dataset
+def Custom_data(args):
+    '''
+    !!! Need to change line 178 before running the code !!!
+    '''
+    # Sania: Change this line for my datasets
+    id_dict = {'tumour':1,'normal':0}  # {'Cancer': 1, 'health': 0}
+    data = scanpy.read_h5ad("/scratch/sah2p/projects/ScRAT/data/GSE131907/04_test_clusters.h5ad")
+    origin = data.obsm['X_pca']
+    # if args.pca == True:
+    #     origin = data.obsm['X_pca']
+    # else:
+    #     origin = data.layers['raw']
+    
+    patient_id = data.obs['sample']
+
+    labels = data.obs['phenotype']
+
+    cell_type = data.obs['lcell_type']
+
+    cell_type_large = None
+    # This (high resolution) cell_type is only for attention analysis, not necessary
+    # cell_type_large = data.obs['cell_type_large']
+
+    labels_ = np.array(labels.map(id_dict))
+
+    l_dict = {}
+    indices = np.arange(origin.shape[0])
+    p_ids = sorted(set(patient_id))
+    p_idx = []
+
+    for i in p_ids:
+        idx = indices[patient_id == i]
+        if len(set(labels_[idx])) > 1:   # one patient with more than one labels
+            for ii in sorted(set(labels_[idx])):
+                if ii > -1:
+                    iidx = idx[labels_[idx] == ii]
+                    tt_idx = iidx
+                    if len(tt_idx) < 500:  # exclude the sample with the number of cells fewer than 500
+                        continue
+                    p_idx.append(tt_idx)
+                    l_dict[labels_[iidx[0]]] = l_dict.get(labels_[iidx[0]], 0) + 1
+        else:
+            if labels_[idx[0]] > -1:
+                tt_idx = idx
+                if len(tt_idx) < 500:  # exclude the sample with the number of cells fewer than 500
+                    continue
+                p_idx.append(tt_idx)
+                l_dict[labels_[idx[0]]] = l_dict.get(labels_[idx[0]], 0) + 1
+
+    # print(l_dict)
+
+    return p_idx, labels_, cell_type, patient_id, origin, cell_type_large

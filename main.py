@@ -80,7 +80,8 @@ elif args.task == 'severity':
     label_dict = {0: 'mild', 1: 'severe'}
 elif args.task == 'stage':
     label_dict = {0: 'convalescence', 1: 'progression'}
-
+elif args.task == 'custom': # Changed this for my dataset.
+    label_dict = {0: 'normal', 1: 'tumour'}
 
 def train(x_train, x_valid, x_test, y_train, y_valid, y_test, id_train, id_test, data_augmented, data):
     dataset_1 = MyDataset(x_train, x_valid, x_test, y_train, y_valid, y_test, id_train, id_test, fold='train')
@@ -220,14 +221,14 @@ def train(x_train, x_valid, x_test, y_train, y_valid, y_test, id_train, id_test,
 
             # For attention analysis:
 
-            # if args.model == 'Transformer':
-            #     attens = best_model.module.get_attention_maps(x_)[-1]
-            #     for iter in range(len(attens)):
-            #         topK = np.bincount(attens[iter].argsort(-1)[:, :, -args.top_k:].
-            #                            cpu().detach().numpy().reshape(-1)).argsort()[-20:][::-1]   # 20 is a 
-            #         for idd in id_[iter][topK]:
-            #             stats[cell_type_large[idd]] = stats.get(cell_type_large[idd], 0) + 1
-            #             stats_id[idd] = stats_id.get(idd, 0) + 1
+            if args.model == 'Transformer':
+                attens = best_model.module.get_attention_maps(x_)[-1]
+                for iter in range(len(attens)):
+                    topK = np.bincount(attens[iter].argsort(-1)[:, :, -args.top_k:].
+                                       cpu().detach().numpy().reshape(-1)).argsort()[-20:][::-1]   # 20 is a 
+                    for idd in id_[iter][topK]:
+                        stats[cell_type_large[idd]] = stats.get(cell_type_large[idd], 0) + 1
+                        stats_id[idd] = stats_id.get(idd, 0) + 1
 
             y_ = y_[0][0]
             true.append(y_)
